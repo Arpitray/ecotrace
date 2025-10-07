@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { searchPlantDatabase } from '../plant-data.js';
-import { NextResponse } from 'next/server';
-import { searchPlantDatabase } from '../plant-data.js';
+import { searchPlantDatabase } from '../plant-data';
 
 // Local-only trefle replacement: return curated data from our local database.
 // This removes dependence on external Trefle API and avoids auth/token issues.
