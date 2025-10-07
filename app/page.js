@@ -1,103 +1,283 @@
-import Image from "next/image";
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import Loader from "./Components/Loader";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const router = useRouter();
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const [previewSrc, setPreviewSrc] = useState(null);
+  const [fileName, setFileName] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [error, setError] = useState(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  function openUpload() {
+    fileInputRef.current?.click();
+  }
+
+  function openCamera() {
+    cameraInputRef.current?.click();
+  }
+
+  function onFileChange(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setFileName(file.name);
+    const url = URL.createObjectURL(file);
+    setPreviewSrc(url);
+    setError(null); // Clear any previous errors
+  }
+
+  async function handleAnalyze() {
+    if (!fileInputRef.current?.files?.[0] && !cameraInputRef.current?.files?.[0]) {
+      setError('Please select an image first');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setError(null);
+
+    try {
+      // Get the file from whichever input was used
+      const file = fileInputRef.current?.files?.[0] || cameraInputRef.current?.files?.[0];
+      
+      // Create FormData to send the image
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Call the identify API
+      const response = await fetch('/api/identify', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to identify plant');
+      }
+
+      // Navigate to results page with the plant data
+      const encodedData = encodeURIComponent(JSON.stringify(data));
+      router.push(`/results?data=${encodedData}`);
+
+    } catch (error) {
+      console.error('Error analyzing plant:', error);
+      setError(error.message || 'Failed to analyze the image. Please try again.');
+      setIsAnalyzing(false);
+    }
+  }
+
+  // Show loader when analyzing
+  if (isAnalyzing) {
+    return <Loader />;
+  }
+
+  return (
+    <main className="min-h-screen bg-[#EBE8DC] relative overflow-hidden">
+      {/* Main container */}
+      <div className="w-[80%] mx-auto px-6 py-12 lg:py-16">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+          
+          {/* Left side - Hero text */}
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <h1 className="text-6xl lg:text-7xl xl:text-8xl leading-tight">
+                <span className="font-light block text-gray-900">Where Nature</span>
+                <span className="font-serif italic block text-gray-900">Meets Elegance</span>
+              </h1>
+            </div>
+
+            {/* Plant image card */}
+            <div className="relative rounded-3xl overflow-hidden shadow-lg max-w-md">
+              <img 
+                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23C8B39E;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23A89B8F;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='400' height='300'/%3E%3Cpath d='M200 280 Q150 200 180 120 Q190 80 200 50 Q210 80 220 120 Q250 200 200 280' fill='%23E8DDD0' opacity='0.3'/%3E%3Cpath d='M180 260 Q160 200 170 150 Q175 120 180 100 Q185 120 190 150 Q200 200 180 260' fill='%23D4C4B0' opacity='0.4'/%3E%3Cpath d='M220 260 Q210 200 215 150 Q218 120 220 100 Q222 120 225 150 Q235 200 220 260' fill='%23D4C4B0' opacity='0.4'/%3E%3Ccircle cx='200' cy='60' r='35' fill='%23F5E6D3' opacity='0.5'/%3E%3Ccircle cx='190' cy='50' r='25' fill='%23FFE5CC' opacity='0.6'/%3E%3Ctext x='200' y='160' font-family='serif' font-size='24' fill='%23786B5E' text-anchor='middle' opacity='0.7'%3E🌸%3C/text%3E%3C/svg%3E"
+                alt="Botanical illustration" 
+                className="w-full h-auto"
+              />
+            </div>
+
+            {/* Description card */}
+            <div className="bg-[#C8DDD0] rounded-3xl p-6 lg:p-8 max-w-md">
+              <p className="text-gray-800 leading-relaxed font-light">
+                Revitalize your living and working spaces with the magic of greenery and artistic decor. Your journey to a more beautiful environment starts here.
+              </p>
+              <button className="mt-6 px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md">
+                Contact us
+              </button>
+            </div>
+          </div>
+
+          {/* Right side - Feature cards */}
+          <div className="space-y-6">
+            
+            {/* Main description card */}
+            <div className="bg-[#C8DDD0] rounded-3xl p-8 lg:p-10">
+              <p className="text-gray-800 text-lg lg:text-xl leading-relaxed font-light mb-8">
+                Discover unique vintage items from various eras and enjoy a serene shopping experience surrounded by carefully selected live plants. Explore the past and nurture your love for nature at our one-of-a-kind store.
+              </p>
+
+              {/* Decorative icon grid */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-[#E8DDD0] rounded-2xl aspect-square flex items-center justify-center">
+                  <svg className="w-12 h-12 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 2l-4 4 4 4 4-4zm6 0l-4 4 4 4 4-4zm6 0l-4 4 4 4 4-4zM6 14l-4 4 4 4 4-4zm6 0l-4 4 4 4 4-4z"/>
+                  </svg>
+                </div>
+                <div className="bg-[#D4E8D4] rounded-2xl aspect-square flex items-center justify-center">
+                  <svg className="w-12 h-12 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <circle cx="12" cy="6" r="2"/>
+                    <circle cx="12" cy="18" r="2"/>
+                    <circle cx="6" cy="12" r="2"/>
+                    <circle cx="18" cy="12" r="2"/>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Image showcase grid */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-[#8B9DAF] rounded-2xl overflow-hidden">
+                  <img 
+                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Cdefs%3E%3ClinearGradient id='grad2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%238B9DAF;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%236B7D8F;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad2)' width='300' height='200'/%3E%3Ccircle cx='150' cy='100' r='40' fill='%23A5B8C8' opacity='0.5'/%3E%3Cpath d='M120 120 Q150 100 180 120' stroke='%23D4DDE5' stroke-width='3' fill='none' opacity='0.6'/%3E%3C/svg%3E"
+                    alt="Interior design" 
+                    className="w-full h-32 object-cover"
+                  />
+                </div>
+                <div className="bg-[#C8DDD0] rounded-2xl overflow-hidden">
+                  <img 
+                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Cdefs%3E%3ClinearGradient id='grad3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23C8DDD0;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23A8BDB0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad3)' width='300' height='200'/%3E%3Cpath d='M150 50 L140 100 L150 150 L160 100 Z' fill='%236B8E6B' opacity='0.4'/%3E%3Cpath d='M100 80 Q120 100 100 120 Q80 100 100 80' fill='%234A6E4A' opacity='0.3'/%3E%3Cpath d='M200 80 Q220 100 200 120 Q180 100 200 80' fill='%234A6E4A' opacity='0.3'/%3E%3C/svg%3E"
+                    alt="Plant life" 
+                    className="w-full h-32 object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* Browse button */}
+              <button 
+                onClick={() => router.push('/browse')}
+                className="w-full bg-[#E8CAD0] hover:bg-[#DDB5BE] rounded-full py-4 text-gray-900 font-light text-lg transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-between px-8"
+              >
+                <span>Browse Now</span>
+                <span className="bg-white/60 rounded-full w-10 h-10 flex items-center justify-center">→</span>
+              </button>
+            </div>
+
+            {/* Upload/Camera section */}
+            {!previewSrc && (
+              <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 border border-gray-200">
+                <h2 className="text-2xl font-serif italic text-gray-900 mb-4">
+                  Identify any plant instantly and learn its eco-benefits!
+                </h2>
+                
+                {/* Error Message */}
+                {error && (
+                  <div className="mb-4 bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl">
+                    <p className="text-sm font-light">{error}</p>
+                  </div>
+                )}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={openUpload}
+                    className="flex-1 px-6 py-4 bg-[#6B8E6B] hover:bg-[#5A7D5A] text-white rounded-2xl font-light transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload Image
+                  </button>
+
+                  <button
+                    onClick={openCamera}
+                    className="flex-1 px-6 py-4 bg-[#8B9DAF] hover:bg-[#7A8C9E] text-white rounded-2xl font-light transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Take Photo
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Preview section */}
+            {previewSrc && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-200">
+                <div className="space-y-4">
+                  {/* Error Message */}
+                  {error && (
+                    <div className="bg-red-100 border border-red-300 text-red-800 px-4 py-3 rounded-xl mb-4">
+                      <p className="text-sm font-light">{error}</p>
+                    </div>
+                  )}
+                  
+                  <div className="relative rounded-2xl overflow-hidden shadow-lg">
+                    <img 
+                      src={previewSrc} 
+                      alt={fileName || "preview"} 
+                      className="w-full h-auto max-h-96 object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-gray-600 font-light truncate flex-1">
+                      {fileName}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setPreviewSrc(null);
+                        setFileName("");
+                        setError(null);
+                      }}
+                      className="ml-4 px-5 py-2 bg-[#E8CAD0] hover:bg-[#DDB5BE] text-gray-900 rounded-full font-light transition-all duration-200 text-sm"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="pt-4 border-t border-gray-200">
+                    <button 
+                      onClick={handleAnalyze}
+                      className="w-full bg-[#6B8E6B] hover:bg-[#5A7D5A] text-white rounded-2xl py-3 font-light transition-all duration-300 shadow-md hover:shadow-lg"
+                    >
+                      Analyze Plant
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Bottom brand logos section */}
+        <div className="mt-16 pt-8 border-t border-gray-300">
+          <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12 opacity-40">
+            <span className="text-gray-600 font-light text-sm tracking-wider">COMMON COFFEE</span>
+            <span className="text-gray-600 font-light text-sm tracking-wider">mindful sourcing</span>
+            <span className="text-gray-600 font-light text-sm tracking-wider">Product:able</span>
+            <span className="text-gray-600 font-light text-sm tracking-wider">Mosaic Voice</span>
+            <span className="text-gray-600 font-light text-sm tracking-wider">NOMAD CAPITAL</span>
+          </div>
+        </div>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={onFileChange}
+        className="hidden"
+      />
+
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={onFileChange}
+        className="hidden"
+      />
+    </main>
   );
 }
