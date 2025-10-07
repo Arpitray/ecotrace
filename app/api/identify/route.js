@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-const PLANTNET_API_KEY = '2b10vOxvLNU2R0M1AgyPLqdn';
-const PLANTNET_BASE_URL = 'https://my-api.plantnet.org/v2';
+const PLANTNET_API_KEY = process.env.PLANTNET_API_KEY || '2b10vOxvLNU2R0M1AgyPLqdn';
+const PLANTNET_BASE_URL = process.env.PLANTNET_BASE_URL || 'https://my-api.plantnet.org/v2';
 
 // Random environmental facts about plants
 const ECO_FACTS = [

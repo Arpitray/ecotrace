@@ -34,3 +34,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+## Vercel Deployment (project-specific)
+
+This project is ready for Vercel. Recommended steps:
+
+1. Push the repository to your Git provider (GitHub/GitLab/Bitbucket).
+2. In Vercel, import the repository and create a project.
+3. Add the following environment variables in Vercel Project Settings -> Environment Variables:
+	- `PLANTNET_API_KEY` (required) — your PlantNet API key
+	- `PLANTNET_BASE_URL` (optional) — default: `https://my-api.plantnet.org/v2`
+	- `PERENUAL_API_KEY` (optional but recommended for richer plant data)
+	- `PERENUAL_BASE_URL` (optional) — default: `https://perenual.com/api/species-list`
+
+Vercel will run `npm run build` automatically. If you need to set secrets via the Vercel CLI, use `vercel env add <NAME>`.
+
+Notes:
+- Keep API keys out of client code; server routes in `app/api/*` read them from `process.env`.
+- `.env.local` is intentionally gitignored; do not commit secrets.

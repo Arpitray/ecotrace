@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "next.config.mjs", "use": "@vercel/next" }
+  ],
+  "routes": [
+    { "src": "/(.*)", "dest": "/$1" }
+  ],
+  "env": {
+    "PERENUAL_API_KEY": "@perenual_api_key",
+    "PERENUAL_BASE_URL": "https://perenual.com/api/species-list",
+    "PLANTNET_API_KEY": "@plantnet_api_key",
+    "PLANTNET_BASE_URL": "https://my-api.plantnet.org/v2"
+  }
+}

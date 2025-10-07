@@ -60,7 +60,17 @@ export default function Home() {
       }
 
       // Navigate to results page with the plant data
-      const encodedData = encodeURIComponent(JSON.stringify(data));
+      // Include the uploaded image (previewSrc) so Results can show the original photo
+      const payload = { ...data, uploadedImage: previewSrc || null };
+      // Use base64 encoding to avoid URI malformed errors, then percent-encode
+      let encodedData;
+      try {
+        const b64 = (typeof window !== 'undefined' && window.btoa) ? window.btoa(JSON.stringify(payload)) : Buffer.from(JSON.stringify(payload)).toString('base64');
+        encodedData = encodeURIComponent(b64);
+      } catch (e) {
+        // Fallback to plain percent-encoded JSON if base64 fails
+        encodedData = encodeURIComponent(JSON.stringify(payload));
+      }
       router.push(`/results?data=${encodedData}`);
 
     } catch (error) {
@@ -78,7 +88,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#EBE8DC] relative overflow-hidden">
       {/* Main container */}
-      <div className="w-[80%] mx-auto px-6 py-12 lg:py-16">
+      <div className="w-[85%] mx-auto px-6 py-6 lg:py-2">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           
           {/* Left side - Hero text */}
@@ -91,7 +101,7 @@ export default function Home() {
             </div>
 
             {/* Plant image card */}
-            <div className="relative rounded-3xl overflow-hidden shadow-lg max-w-md">
+            <div className="relative rounded-3xl overflow-hidden shadow-lg max-w-[80%]">
               <img 
                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23C8B39E;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23A89B8F;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='400' height='300'/%3E%3Cpath d='M200 280 Q150 200 180 120 Q190 80 200 50 Q210 80 220 120 Q250 200 200 280' fill='%23E8DDD0' opacity='0.3'/%3E%3Cpath d='M180 260 Q160 200 170 150 Q175 120 180 100 Q185 120 190 150 Q200 200 180 260' fill='%23D4C4B0' opacity='0.4'/%3E%3Cpath d='M220 260 Q210 200 215 150 Q218 120 220 100 Q222 120 225 150 Q235 200 220 260' fill='%23D4C4B0' opacity='0.4'/%3E%3Ccircle cx='200' cy='60' r='35' fill='%23F5E6D3' opacity='0.5'/%3E%3Ccircle cx='190' cy='50' r='25' fill='%23FFE5CC' opacity='0.6'/%3E%3Ctext x='200' y='160' font-family='serif' font-size='24' fill='%23786B5E' text-anchor='middle' opacity='0.7'%3E🌸%3C/text%3E%3C/svg%3E"
                 alt="Botanical illustration" 
@@ -100,55 +110,39 @@ export default function Home() {
             </div>
 
             {/* Description card */}
-            <div className="bg-[#C8DDD0] rounded-3xl p-6 lg:p-8 max-w-md">
+            <div className="bg-[#C8DDD0] rounded-3xl p-6 lg:p-8 max-w-[80%]">
               <p className="text-gray-800 leading-relaxed font-light">
-                Revitalize your living and working spaces with the magic of greenery and artistic decor. Your journey to a more beautiful environment starts here.
+               Discover the plants around you instantly. Snap a photo, learn their benefits, and become a nature pro in minutes!
               </p>
-              <button className="mt-6 px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md">
+              <button className="mt-6 mailto:rayarpit72@gmail.com px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md">
                 Contact us
               </button>
             </div>
           </div>
 
           {/* Right side - Feature cards */}
-          <div className="space-y-6">
+          <div className="space-y-6 lg:pt-67">
             
             {/* Main description card */}
             <div className="bg-[#C8DDD0] rounded-3xl p-8 lg:p-10">
-              <p className="text-gray-800 text-lg lg:text-xl leading-relaxed font-light mb-8">
-                Discover unique vintage items from various eras and enjoy a serene shopping experience surrounded by carefully selected live plants. Explore the past and nurture your love for nature at our one-of-a-kind store.
+              <p className="text-gray-800 text-lg lg:text-xl leading-relaxed font-semibold t mb-8">
+               <span className="font-bold">Plantify</span> AI is your personal plant companion. Using the power of AI, it identifies plants from photos and teaches you about their environmental, ecological, and medicinal benefits. Whether you’re a gardening enthusiast or just curious, Plantify AI makes learning about nature fun, easy, and interactive.
               </p>
 
-              {/* Decorative icon grid */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#E8DDD0] rounded-2xl aspect-square flex items-center justify-center">
-                  <svg className="w-12 h-12 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M6 2l-4 4 4 4 4-4zm6 0l-4 4 4 4 4-4zm6 0l-4 4 4 4 4-4zM6 14l-4 4 4 4 4-4zm6 0l-4 4 4 4 4-4z"/>
-                  </svg>
-                </div>
-                <div className="bg-[#D4E8D4] rounded-2xl aspect-square flex items-center justify-center">
-                  <svg className="w-12 h-12 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="3"/>
-                    <circle cx="12" cy="6" r="2"/>
-                    <circle cx="12" cy="18" r="2"/>
-                    <circle cx="6" cy="12" r="2"/>
-                    <circle cx="18" cy="12" r="2"/>
-                  </svg>
-                </div>
-              </div>
+     
 
               {/* Image showcase grid */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-[#8B9DAF] rounded-2xl overflow-hidden">
                   <img 
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Cdefs%3E%3ClinearGradient id='grad2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%238B9DAF;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%236B7D8F;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad2)' width='300' height='200'/%3E%3Ccircle cx='150' cy='100' r='40' fill='%23A5B8C8' opacity='0.5'/%3E%3Cpath d='M120 120 Q150 100 180 120' stroke='%23D4DDE5' stroke-width='3' fill='none' opacity='0.6'/%3E%3C/svg%3E"
+                    src="https://res.cloudinary.com/dsjjdnife/image/upload/v1759865483/Gemini_Generated_Image_gtyxjogtyxjogtyx_khbeey.png"
                     alt="Interior design" 
                     className="w-full h-32 object-cover"
                   />
                 </div>
                 <div className="bg-[#C8DDD0] rounded-2xl overflow-hidden">
                   <img 
-                    src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 200'%3E%3Cdefs%3E%3ClinearGradient id='grad3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23C8DDD0;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23A8BDB0;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad3)' width='300' height='200'/%3E%3Cpath d='M150 50 L140 100 L150 150 L160 100 Z' fill='%236B8E6B' opacity='0.4'/%3E%3Cpath d='M100 80 Q120 100 100 120 Q80 100 100 80' fill='%234A6E4A' opacity='0.3'/%3E%3Cpath d='M200 80 Q220 100 200 120 Q180 100 200 80' fill='%234A6E4A' opacity='0.3'/%3E%3C/svg%3E"
+                    src="https://res.cloudinary.com/dsjjdnife/image/upload/v1759865719/Gemini_Generated_Image_vf8wpsvf8wpsvf8w_ldfj63.png"
                     alt="Plant life" 
                     className="w-full h-32 object-cover"
                   />
@@ -156,13 +150,7 @@ export default function Home() {
               </div>
 
               {/* Browse button */}
-              <button 
-                onClick={() => router.push('/browse')}
-                className="w-full bg-[#E8CAD0] hover:bg-[#DDB5BE] rounded-full py-4 text-gray-900 font-light text-lg transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-between px-8"
-              >
-                <span>Browse Now</span>
-                <span className="bg-white/60 rounded-full w-10 h-10 flex items-center justify-center">→</span>
-              </button>
+           
             </div>
 
             {/* Upload/Camera section */}

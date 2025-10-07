@@ -7,23 +7,91 @@ function ResultsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [plantData, setPlantData] = useState(null);
+  const [perenualData, setPerenualData] = useState(null);
+  const [loadingPerenual, setLoadingPerenual] = useState(false);
 
   useEffect(() => {
     // Get the plant data from URL query params (passed from the main page)
     const dataParam = searchParams.get('data');
     
     if (dataParam) {
+      // Try multiple decoding/parsing strategies to avoid 'URI malformed' errors
+      const tryParseJSON = (str) => {
+        try {
+          return JSON.parse(str);
+        } catch (e) {
+          return null;
+        }
+      };
+
+      let parsed = null;
+
+      // 1) Try decodeURIComponent -> JSON.parse
       try {
-        const decoded = JSON.parse(decodeURIComponent(dataParam));
-        setPlantData(decoded);
-      } catch (error) {
-        console.error('Error parsing plant data:', error);
+        const decoded = decodeURIComponent(dataParam);
+        parsed = tryParseJSON(decoded);
+      } catch (decodeErr) {
+        // decodeURIComponent can throw a URIError for malformed input
+        console.warn('decodeURIComponent failed for results dataParam, will try alternatives', decodeErr);
+      }
+
+      // 2) If that failed, try base64 decode (atob) then JSON.parse
+      if (!parsed) {
+        try {
+          if (typeof window !== 'undefined' && typeof window.atob === 'function') {
+            const b64 = window.atob(dataParam);
+            parsed = tryParseJSON(b64);
+          }
+        } catch (b64Err) {
+          console.warn('base64 atob decode failed for results dataParam', b64Err);
+        }
+      }
+
+      // 3) If still not parsed, try raw JSON.parse of the param
+      if (!parsed) {
+        parsed = tryParseJSON(dataParam);
+      }
+
+      if (parsed) {
+        setPlantData(parsed);
+      } else {
+        console.error('Failed to parse plant data from URL param; redirecting to home. dataParam:', dataParam);
+        router.push('/');
       }
     } else {
       // If no data, redirect to home
       router.push('/');
     }
   }, [searchParams, router]);
+
+  // Fetch Perenual details once we have the identified plant's scientific name
+  useEffect(() => {
+    if (!plantData || !plantData.scientificName) return;
+
+    let mounted = true;
+    async function fetchPerenual() {
+      setLoadingPerenual(true);
+      try {
+        const altName = plantData.genus ? `${plantData.genus} ${plantData.scientificName.split(' ').slice(1).join(' ')}` : '';
+        const commonName = (plantData.commonNames && plantData.commonNames.length > 0) ? plantData.commonNames[0] : '';
+        const url = `/api/perenual?q=${encodeURIComponent(plantData.scientificName)}${altName ? `&alt=${encodeURIComponent(altName)}` : ''}${commonName ? `&common=${encodeURIComponent(commonName)}` : ''}`;
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('Failed to fetch perenual data');
+        const json = await resp.json();
+        if (!mounted) return;
+        setPerenualData(json);
+      } catch (err) {
+        console.error('Error fetching Perenual data:', err);
+        if (mounted) setPerenualData({ source: 'error', note: 'Failed to load external details' });
+      } finally {
+        if (mounted) setLoadingPerenual(false);
+      }
+    }
+
+    fetchPerenual();
+
+    return () => { mounted = false; };
+  }, [plantData]);
 
   if (!plantData) {
     return (
@@ -54,8 +122,8 @@ function ResultsContent() {
           <span className="font-light">Back to Home</span>
         </button>
 
-        {/* Header Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 lg:p-12 shadow-xl mb-8">
+  {/* Header Card */}
+  <div className="relative bg-white/90 backdrop-blur-sm rounded-3xl p-8 lg:p-12 shadow-xl mb-8">
           {/* Success Badge */}
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
@@ -66,28 +134,49 @@ function ResultsContent() {
             </div>
           </div>
 
-          {/* Plant Name */}
+          {/* Plant Name + Uploaded Image to the right */}
           <div className="mb-6">
-            {primaryCommonName && (
-              <h1 className="text-5xl lg:text-6xl font-serif italic text-gray-900 mb-3">
-                {primaryCommonName}
-              </h1>
-            )}
-            <h2 className="text-2xl lg:text-3xl font-light text-gray-700 mb-2">
-              {plantData.scientificName}
-            </h2>
-            <div className="flex flex-wrap gap-2 mt-4">
-              {plantData.family && (
-                <span className="bg-[#C8DDD0] px-4 py-2 rounded-full text-sm text-gray-800">
-                  Family: {plantData.family}
-                </span>
+            <div className="pr-6">
+              {primaryCommonName && (
+                <h1 className="text-5xl lg:text-6xl font-serif italic text-gray-900 mb-3">
+                  {primaryCommonName}
+                </h1>
               )}
-              {plantData.genus && (
-                <span className="bg-[#E8DDD0] px-4 py-2 rounded-full text-sm text-gray-800">
-                  Genus: {plantData.genus}
-                </span>
-              )}
+              <h2 className="text-2xl lg:text-3xl font-light text-gray-700 mb-2">
+                {plantData.scientificName}
+              </h2>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {plantData.family && (
+                  <span className="bg-[#C8DDD0] px-4 py-2 rounded-full text-sm text-gray-800">
+                    Family: {plantData.family}
+                  </span>
+                )}
+                {plantData.genus && (
+                  <span className="bg-[#E8DDD0] px-4 py-2 rounded-full text-sm text-gray-800">
+                    Genus: {plantData.genus}
+                  </span>
+                )}
+              </div>
             </div>
+
+            {/* Uploaded image: show inline on small screens, absolute-right and vertically centered on md+ */}
+            {plantData.uploadedImage && (
+              <>
+                {/* Mobile / small screens: inline below name */}
+                <div className="block md:hidden mt-4">
+                  <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white shadow-md bg-gray-100 flex items-center justify-center mx-auto">
+                    <img src={plantData.uploadedImage} alt="Uploaded for identification" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                  </div>
+                </div>
+
+                {/* Desktop: absolute positioned at the right extreme of the header card, vertically centered */}
+                <div className="hidden md:block absolute right-6 top-1/2 transform -translate-y-1/2">
+                  <div className="w-36 h-36 lg:w-44 lg:h-44 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center">
+                    <img src={plantData.uploadedImage} alt="Uploaded for identification" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Common Names */}
@@ -146,6 +235,150 @@ function ResultsContent() {
           </div>
         </div>
 
+        {/* Care & Details (Perenual/local) */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl mb-8">
+          <h3 className="text-2xl font-serif italic text-gray-900 mb-4">Care & Details</h3>
+          {loadingPerenual ? (
+            <p className="text-gray-600">Loading care details...</p>
+          ) : perenualData ? (
+            <div className="space-y-4 text-gray-800">
+              {/* Basic Info Section */}
+              {(perenualData.data?.cycle || perenualData.data?.type || perenualData.data?.origin) && (
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-lg mb-2">Basic Information</h4>
+                  {perenualData.data?.cycle && <p><strong>Life Cycle:</strong> {perenualData.data.cycle}</p>}
+                  {perenualData.data?.type && <p><strong>Type:</strong> {perenualData.data.type}</p>}
+                  {perenualData.data?.origin && <p><strong>Origin:</strong> {perenualData.data.origin}</p>}
+                  {perenualData.data?.dimension && <p><strong>Size:</strong> {perenualData.data.dimension}</p>}
+                  {perenualData.data?.family && <p><strong>Family:</strong> {perenualData.data.family}</p>}
+                </div>
+              )}
+
+              {/* Care Requirements Section */}
+              {(perenualData.data?.watering || perenualData.data?.sunlight || perenualData.data?.care_level || perenualData.data?.maintenance) && (
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-lg mb-2">Care Requirements</h4>
+                  {perenualData.data?.care_level && <p><strong>Care Level:</strong> {perenualData.data.care_level}</p>}
+                  {perenualData.data?.watering && <p><strong>Watering:</strong> {perenualData.data.watering}</p>}
+                  {perenualData.data?.sunlight && <p><strong>Sunlight:</strong> {perenualData.data.sunlight}</p>}
+                  {perenualData.data?.maintenance && <p><strong>Maintenance:</strong> {perenualData.data.maintenance}</p>}
+                  {perenualData.data?.growthRate && <p><strong>Growth Rate:</strong> {perenualData.data.growthRate}</p>}
+                </div>
+              )}
+
+              {/* Growing Conditions */}
+              {(perenualData.data?.indoor || perenualData.data?.hardiness || perenualData.data?.propagation) && (
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-lg mb-2">Growing Conditions</h4>
+                  {perenualData.data?.indoor && <p><strong>Indoor/Outdoor:</strong> {perenualData.data.indoor}</p>}
+                  {perenualData.data?.hardiness && <p><strong>Hardiness Zones:</strong> {perenualData.data.hardiness}</p>}
+                  {perenualData.data?.propagation && <p><strong>Propagation:</strong> {perenualData.data.propagation}</p>}
+                  {perenualData.data?.drought_tolerant && <p><strong>Drought Tolerant:</strong> {perenualData.data.drought_tolerant}</p>}
+                  {perenualData.data?.salt_tolerant && <p><strong>Salt Tolerant:</strong> {perenualData.data.salt_tolerant}</p>}
+                </div>
+              )}
+
+              {/* Flowering & Fruiting */}
+              {(perenualData.data?.flowers || perenualData.data?.fruits || perenualData.data?.flowering_season) && (
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-lg mb-2">Flowering & Fruiting</h4>
+                  {perenualData.data?.flowers && <p><strong>Produces Flowers:</strong> {perenualData.data.flowers}</p>}
+                  {perenualData.data?.flowering_season && <p><strong>Flowering Season:</strong> {perenualData.data.flowering_season}</p>}
+                  {perenualData.data?.fruits && <p><strong>Produces Fruits:</strong> {perenualData.data.fruits}</p>}
+                  {perenualData.data?.fruit_color && <p><strong>Fruit Color:</strong> {perenualData.data.fruit_color}</p>}
+                </div>
+              )}
+
+              {/* Safety & Characteristics */}
+              {(perenualData.data?.poisonous_to_humans || perenualData.data?.poisonous_to_pets || perenualData.data?.toxicity || perenualData.data?.thorny || perenualData.data?.invasive) && (
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-lg mb-2">Safety & Characteristics</h4>
+                  {perenualData.data?.toxicity && <p><strong>Toxicity:</strong> {perenualData.data.toxicity}</p>}
+                  {perenualData.data?.poisonous_to_humans && <p><strong>Poisonous to Humans:</strong> {perenualData.data.poisonous_to_humans}</p>}
+                  {perenualData.data?.poisonous_to_pets && <p><strong>Poisonous to Pets:</strong> {perenualData.data.poisonous_to_pets}</p>}
+                  {perenualData.data?.thorny && <p><strong>Thorny:</strong> {perenualData.data.thorny}</p>}
+                  {perenualData.data?.invasive && <p><strong>Invasive:</strong> {perenualData.data.invasive}</p>}
+                  {perenualData.data?.tropical && <p><strong>Tropical:</strong> {perenualData.data.tropical}</p>}
+                </div>
+              )}
+
+              {/* Uses & Benefits */}
+              {(perenualData.data?.edibility || perenualData.data?.medicinal || perenualData.data?.cuisine || perenualData.data?.usage || perenualData.data?.airPurifying) && (
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-lg mb-2">Uses & Benefits</h4>
+                  {perenualData.data?.usage && <p><strong>Usage:</strong> {perenualData.data.usage}</p>}
+                  {perenualData.data?.edibility && <p><strong>Edibility:</strong> {perenualData.data.edibility}</p>}
+                  {perenualData.data?.medicinal && <p><strong>Medicinal Use:</strong> {perenualData.data.medicinal}</p>}
+                  {perenualData.data?.cuisine && <p><strong>Culinary Use:</strong> {perenualData.data.cuisine}</p>}
+                  {perenualData.data?.airPurifying && (
+                    <p><strong>Air Purification:</strong> {perenualData.data.airPurifying === null ? 'Unknown' : (typeof perenualData.data.airPurifying === 'boolean' ? (perenualData.data.airPurifying ? 'Yes' : 'No') : perenualData.data.airPurifying)}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Fallback/local-specific fields */}
+              {perenualData.data?.foundIn && (
+                <div className="border-b border-gray-200 pb-3">
+                  <p><strong>Found in:</strong> {perenualData.data.foundIn}</p>
+                </div>
+              )}
+
+              {/* Description */}
+              {perenualData.data?.description && (
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-lg mb-2">Description</h4>
+                  <p className="text-sm leading-relaxed">{perenualData.data.description}</p>
+                </div>
+              )}
+
+              {/* Images handling */}
+              {perenualData.data?.thumbnail && (
+                <div className="mb-3">
+                  <img src={perenualData.data.thumbnail} alt={`${plantData.scientificName} thumbnail`} className="w-32 h-32 object-cover rounded-lg shadow-md" />
+                </div>
+              )}
+              {/* Local DB single image */}
+              {perenualData.data?.image && !perenualData.data?.thumbnail && (
+                <div className="mb-3">
+                  <img src={perenualData.data.image} alt={`${plantData.scientificName}`} className="w-32 h-32 object-cover rounded-lg shadow-md" onError={(e) => { e.target.style.display = 'none'; }} />
+                </div>
+              )}
+              {perenualData.data?.images && perenualData.data.images.length > 0 && perenualData.data.images[0]?.url && (
+                <div>
+                  <strong>Additional Images:</strong>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {perenualData.data.images.slice(0,4).map((img, idx) => (
+                      <img key={idx} src={img.url} alt={`${plantData.scientificName}-extra-${idx}`} className="w-full h-24 object-cover rounded-lg" onError={(e) => { e.target.style.display = 'none'; }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Source and note */}
+              <div className="mt-4 pt-3 border-t border-gray-200">
+                {perenualData.source && (
+                  <p className="text-sm text-gray-500">
+                    <strong>Source:</strong> {perenualData.source}
+                  </p>
+                )}
+                {perenualData.note && (
+                  <p className="text-sm text-gray-500 mt-1">{perenualData.note}</p>
+                )}
+              </div>
+
+              {/* Debug: if no useful fields present, show the raw data object to assist debugging */}
+              {(!perenualData.data || Object.keys(perenualData.data).filter(k => perenualData.data[k] !== null && perenualData.data[k] !== undefined).length === 0) && (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-600 mb-2">No mapped fields available. Raw response:</p>
+                  <pre className="p-3 bg-gray-100 rounded text-xs text-gray-700 overflow-auto max-h-64">{JSON.stringify(perenualData, null, 2)}</pre>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-gray-600">No additional care details available.</p>
+          )}
+        </div>
+
         {/* Alternative Matches */}
         {plantData.alternativeMatches && plantData.alternativeMatches.length > 0 && (
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-xl">
@@ -154,21 +387,51 @@ function ResultsContent() {
             </h3>
             <div className="space-y-4">
               {plantData.alternativeMatches.map((match, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-900">{match.scientificName}</p>
-                    {match.commonNames && match.commonNames.length > 0 && (
-                      <p className="text-sm text-gray-600">{match.commonNames[0]}</p>
-                    )}
+                  <div
+                    key={idx}
+                    role="button"
+                    onClick={() => {
+                      try {
+                        const payload = {
+                          scientificName: match.scientificName,
+                          commonNames: match.commonNames || [],
+                          family: plantData.family || null,
+                          genus: plantData.genus || null,
+                          score: match.score || 0,
+                          images: [],
+                          ecoFact: plantData.ecoFact || null,
+                          alternativeMatches: plantData.alternativeMatches || [],
+                          // preserve uploaded image so header shows the same photo
+                          uploadedImage: plantData.uploadedImage || null,
+                        };
+
+                        // encode similar to the main page: base64 then encodeURIComponent
+                        let encoded;
+                        try {
+                          const b64 = (typeof window !== 'undefined' && window.btoa) ? window.btoa(JSON.stringify(payload)) : Buffer.from(JSON.stringify(payload)).toString('base64');
+                          encoded = encodeURIComponent(b64);
+                        } catch (e) {
+                          encoded = encodeURIComponent(JSON.stringify(payload));
+                        }
+
+                        router.push(`/results?data=${encoded}`);
+                      } catch (e) {
+                        console.error('Failed to open alternative match', e);
+                      }
+                    }}
+                    className="cursor-pointer flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                  >
+                    <div>
+                      <p className="font-semibold text-gray-900">{match.scientificName}</p>
+                      {match.commonNames && match.commonNames.length > 0 && (
+                        <p className="text-sm text-gray-600">{match.commonNames[0]}</p>
+                      )}
+                    </div>
+                    <div className="bg-[#6B8E6B] text-white px-4 py-2 rounded-full text-sm font-semibold">
+                      {match.score}% match
+                    </div>
                   </div>
-                  <div className="bg-[#6B8E6B] text-white px-4 py-2 rounded-full text-sm font-semibold">
-                    {match.score}% match
-                  </div>
-                </div>
-              ))}
+                ))}
             </div>
           </div>
         )}
