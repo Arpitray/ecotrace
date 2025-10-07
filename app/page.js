@@ -88,11 +88,11 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-[#EBE8DC] relative overflow-hidden">
       {/* Main container */}
-      <div className="w-[85%] mx-auto px-6 py-6 lg:py-2">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-start">
+      <div className="w-[85%] mx-auto px-6 py-6 lg:py-2 flex flex-col justify-center">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center justify-center">
           
           {/* Left side - Hero text */}
-          <div className="space-y-8">
+          <div className="space-y-8 flex justify-center flex-col items-center">
             <div className="space-y-4">
               <h1 className="text-6xl lg:text-7xl xl:text-8xl leading-tight">
                 <span className="font-light block text-gray-900">Where Nature</span>
@@ -101,16 +101,16 @@ export default function Home() {
             </div>
 
             {/* Plant image card */}
-            <div className="relative rounded-3xl overflow-hidden shadow-lg max-w-[80%]">
+            <div className="relative rounded-3xl overflow-hidden shadow-lg w-[75%]  max-sm:w-[100%]">
               <img 
                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23C8B39E;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23A89B8F;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad)' width='400' height='300'/%3E%3Cpath d='M200 280 Q150 200 180 120 Q190 80 200 50 Q210 80 220 120 Q250 200 200 280' fill='%23E8DDD0' opacity='0.3'/%3E%3Cpath d='M180 260 Q160 200 170 150 Q175 120 180 100 Q185 120 190 150 Q200 200 180 260' fill='%23D4C4B0' opacity='0.4'/%3E%3Cpath d='M220 260 Q210 200 215 150 Q218 120 220 100 Q222 120 225 150 Q235 200 220 260' fill='%23D4C4B0' opacity='0.4'/%3E%3Ccircle cx='200' cy='60' r='35' fill='%23F5E6D3' opacity='0.5'/%3E%3Ccircle cx='190' cy='50' r='25' fill='%23FFE5CC' opacity='0.6'/%3E%3Ctext x='200' y='160' font-family='serif' font-size='24' fill='%23786B5E' text-anchor='middle' opacity='0.7'%3E🌸%3C/text%3E%3C/svg%3E"
                 alt="Botanical illustration" 
-                className="w-full h-auto"
+                className="w-full"
               />
             </div>
 
             {/* Description card */}
-            <div className="bg-[#C8DDD0] rounded-3xl p-6 lg:p-8 max-w-[80%]">
+            <div className="bg-[#C8DDD0] rounded-3xl p-6 lg:p-8 w-[75%] max-sm:w-[100%]">
               <p className="text-gray-800 leading-relaxed font-light">
                Discover the plants around you instantly. Snap a photo, learn their benefits, and become a nature pro in minutes!
               </p>
@@ -121,11 +121,11 @@ export default function Home() {
           </div>
 
           {/* Right side - Feature cards */}
-          <div className="space-y-6 lg:pt-67">
+          <div className="space-y-6 lg:pt-60">
             
             {/* Main description card */}
             <div className="bg-[#C8DDD0] rounded-3xl p-8 lg:p-10">
-              <p className="text-gray-800 text-lg lg:text-xl leading-relaxed font-semibold t mb-8">
+              <p className="text-gray-800 text-sm lg:text-xl  font-semibold t mb-8">
                <span className="font-bold">Plantify</span> AI is your personal plant companion. Using the power of AI, it identifies plants from photos and teaches you about their environmental, ecological, and medicinal benefits. Whether you’re a gardening enthusiast or just curious, Plantify AI makes learning about nature fun, easy, and interactive.
               </p>
 
@@ -239,13 +239,12 @@ export default function Home() {
         </div>
 
         {/* Bottom brand logos section */}
-        <div className="mt-16 pt-8 border-t border-gray-300">
+        <div className="mt-16 pt-8 border-t border-gray-500">
           <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12 opacity-40">
-            <span className="text-gray-600 font-light text-sm tracking-wider">COMMON COFFEE</span>
-            <span className="text-gray-600 font-light text-sm tracking-wider">mindful sourcing</span>
-            <span className="text-gray-600 font-light text-sm tracking-wider">Product:able</span>
-            <span className="text-gray-600 font-light text-sm tracking-wider">Mosaic Voice</span>
-            <span className="text-gray-600 font-light text-sm tracking-wider">NOMAD CAPITAL</span>
+            <span className="text-gray-900 font-light text-sm tracking-wider">Shwetha Kumari</span>
+            <span className="text-gray-900 font-light text-sm tracking-wider">Lipsa Sahu</span>
+            <span className="text-gray-900 font-light text-sm tracking-wider">Arpit Ray</span>
+           
           </div>
         </div>
       </div>
