@@ -1,8 +1,9 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Loader from "./Components/Loader";
+import HomeLoader from "./Components/HomeLoader";
 
 export default function Home() {
   const router = useRouter();
@@ -12,6 +13,16 @@ export default function Home() {
   const [fileName, setFileName] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
+  const [showHomeLoader, setShowHomeLoader] = useState(true);
+
+  // Show HomeLoader for 4 seconds on initial load
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowHomeLoader(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   function openUpload() {
     fileInputRef.current?.click();
@@ -80,7 +91,12 @@ export default function Home() {
     }
   }
 
-  // Show loader when analyzing
+  // Show HomeLoader on initial page load
+  if (showHomeLoader) {
+    return <HomeLoader />;
+  }
+
+  // Show Loader when analyzing
   if (isAnalyzing) {
     return <Loader />;
   }
@@ -94,7 +110,7 @@ export default function Home() {
           {/* Left side - Hero text */}
           <div className="space-y-8 flex justify-center flex-col items-center">
             <div className="space-y-4">
-              <h1 className="text-6xl lg:text-7xl xl:text-8xl leading-tight">
+              <h1 className="text-4xl lg:text-7xl xl:text-8xl leading-tight">
                 <span className="font-light block text-gray-900">Where Nature</span>
                 <span className="font-serif italic block text-gray-900">Meets Elegance</span>
               </h1>
@@ -114,9 +130,13 @@ export default function Home() {
               <p className="text-gray-800 leading-relaxed font-light">
                Discover the plants around you instantly. Snap a photo, learn their benefits, and become a nature pro in minutes!
               </p>
-              <button className="mt-6 mailto:rayarpit72@gmail.com px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md">
+              <a
+                href="mailto:rayarpit72@gmail.com?subject=Plantify%20AI%20Contact"
+                aria-label="Contact us via email"
+                className="mt-6 px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md inline-block text-center"
+              >
                 Contact us
-              </button>
+              </a>
             </div>
           </div>
 
