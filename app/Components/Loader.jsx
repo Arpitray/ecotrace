@@ -329,7 +329,8 @@ const StyledWrapper = styled.div`
   @media (max-width: 640px) {
     .ocean-scene-pro {
       width: 95vw;
-      height: 60vh;
+      /* Reduced height for mobile so loader doesn't dominate small viewports */
+      height: 35vh;
     }
     .fish--svg {
       width: 18vmax;
