@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Loader from "./Components/Loader";
 import HomeLoader from "./Components/HomeLoader";
+import { supabase } from '@/lib/SupabaseClient'
 
 export default function Home() {
   const router = useRouter();
@@ -15,6 +16,13 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [showHomeLoader, setShowHomeLoader] = useState(true);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) router.push('/')
+      else router.push('/Login')
+    })
+  }, [router])
+
   // Show HomeLoader for 4 seconds on initial load
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -23,6 +31,7 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, []);
+  
 
   function openUpload() {
     fileInputRef.current?.click();
@@ -252,7 +261,7 @@ export default function Home() {
                 aria-label="Contact us via email"
                 className="mt-6 px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md inline-block text-center"
               >
-                
+                Contact us
               </a>
             </div>
            
