@@ -252,7 +252,7 @@ export default function Home() {
                 aria-label="Contact us via email"
                 className="mt-6 px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md inline-block text-center"
               >
-                Contact us
+                
               </a>
             </div>
            
