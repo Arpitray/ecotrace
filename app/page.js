@@ -124,57 +124,7 @@ export default function Home() {
                 className="w-full"
               />
             </div>
-
-            {/* Description card */}
-            <div className="bg-[#C8DDD0] rounded-3xl p-6 lg:p-8 w-[75%] max-sm:w-[100%]">
-              <p className="text-gray-800 leading-relaxed font-light">
-               Discover the plants around you instantly. Snap a photo, learn their benefits, and become a nature pro in minutes!
-              </p>
-              <a
-                href="mailto:rayarpit72@gmail.com?subject=Plantify%20AI%20Contact"
-                aria-label="Contact us via email"
-                className="mt-6 px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md inline-block text-center"
-              >
-                Contact us
-              </a>
-            </div>
-          </div>
-
-          {/* Right side - Feature cards */}
-          <div className="space-y-6 lg:pt-60">
-            
-            {/* Main description card */}
-            <div className="bg-[#C8DDD0] rounded-3xl p-8 lg:p-10">
-              <p className="text-gray-800 text-sm lg:text-xl  font-semibold t mb-8">
-               <span className="font-bold">Plantify</span> AI is your personal plant companion. Using the power of AI, it identifies plants from photos and teaches you about their environmental, ecological, and medicinal benefits. Whether you’re a gardening enthusiast or just curious, Plantify AI makes learning about nature fun, easy, and interactive.
-              </p>
-
-     
-
-              {/* Image showcase grid */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-[#8B9DAF] rounded-2xl overflow-hidden">
-                  <img 
-                    src="https://res.cloudinary.com/dsjjdnife/image/upload/v1759865483/Gemini_Generated_Image_gtyxjogtyxjogtyx_khbeey.png"
-                    alt="Interior design" 
-                    className="w-full h-32 object-cover"
-                  />
-                </div>
-                <div className="bg-[#C8DDD0] rounded-2xl overflow-hidden">
-                  <img 
-                    src="https://res.cloudinary.com/dsjjdnife/image/upload/v1759865719/Gemini_Generated_Image_vf8wpsvf8wpsvf8w_ldfj63.png"
-                    alt="Plant life" 
-                    className="w-full h-32 object-cover"
-                  />
-                </div>
-              </div>
-
-              {/* Browse button */}
-           
-            </div>
-
-            {/* Upload/Camera section */}
-            {!previewSrc && (
+             {!previewSrc && (
               <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 border border-gray-200">
                 <h2 className="text-2xl font-serif italic text-gray-900 mb-4">
                   Identify any plant instantly and learn its eco-benefits!
@@ -255,6 +205,57 @@ export default function Home() {
                 </div>
               </div>
             )}
+        
+          </div>
+
+          {/* Right side - Feature cards */}
+          <div className="space-y-6 lg:pt-60">
+            
+            {/* Main description card */}
+            <div className="bg-[#C8DDD0] rounded-3xl p-8 lg:p-10">
+              <p className="text-gray-800 text-sm lg:text-xl  font-semibold t mb-8">
+               <span className="font-bold">Plantify</span> AI is your personal plant companion. Using the power of AI, it identifies plants from photos and teaches you about their environmental, ecological, and medicinal benefits. Whether you’re a gardening enthusiast or just curious, Plantify AI makes learning about nature fun, easy, and interactive.
+              </p>
+
+     
+
+              {/* Image showcase grid */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-[#8B9DAF] rounded-2xl overflow-hidden">
+                  <img 
+                    src="https://res.cloudinary.com/dsjjdnife/image/upload/v1759865483/Gemini_Generated_Image_gtyxjogtyxjogtyx_khbeey.png"
+                    alt="Interior design" 
+                    className="w-full h-32 object-cover"
+                  />
+                </div>
+                <div className="bg-[#C8DDD0] rounded-2xl overflow-hidden">
+                  <img 
+                    src="https://res.cloudinary.com/dsjjdnife/image/upload/v1759865719/Gemini_Generated_Image_vf8wpsvf8wpsvf8w_ldfj63.png"
+                    alt="Plant life" 
+                    className="w-full h-32 object-cover"
+                  />
+                </div>
+              </div>
+
+              {/* Browse button */}
+           
+            </div>
+
+            {/* Upload/Camera section */}
+                {/* Description card */}
+            <div className="bg-[#C8DDD0] rounded-3xl p-6 lg:p-8 w-[100%] max-sm:w-[100%]">
+              <p className="text-gray-800 leading-relaxed font-light">
+               Discover the plants around you instantly. Snap a photo, learn their benefits, and become a nature pro in minutes!
+              </p>
+              <a
+                href="mailto:rayarpit72@gmail.com?subject=Plantify%20AI%20Contact"
+                aria-label="Contact us via email"
+                className="mt-6 px-8 py-3 bg-white/80 hover:bg-white border border-gray-300 rounded-full text-gray-900 font-light transition-all duration-300 shadow-sm hover:shadow-md inline-block text-center"
+              >
+                Contact us
+              </a>
+            </div>
+           
           </div>
         </div>
 
