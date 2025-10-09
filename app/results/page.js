@@ -2,6 +2,9 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { savePlantResult } from "@/lib/plantStorage";
+import { supabase } from '@/lib/SupabaseClient';
+import { uploadPlantImage, dataURLtoFile } from '@/lib/imageStorage';
 
 function ResultsContent() {
   const router = useRouter();
@@ -54,6 +57,47 @@ function ResultsContent() {
 
       if (parsed) {
         setPlantData(parsed);
+        // Save to DB only for authenticated users, with session deduplication
+        (async () => {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+              // Create a unique session key for this plant result
+              const sessionKey = `saved_${user.id}_${parsed.scientificName}_${Math.floor(Date.now() / 300000)}`; // 5-minute window
+              
+              // Check if we already saved this plant in this session
+              if (typeof window !== 'undefined' && sessionStorage.getItem(sessionKey)) {
+                console.log('Plant already saved in this session, skipping');
+                return;
+              }
+              
+              // Upload image to Supabase Storage if it's a data URL
+              let imageUrl = parsed.uploadedImage;
+              if (imageUrl && imageUrl.startsWith('data:')) {
+                try {
+                  const file = dataURLtoFile(imageUrl, `plant-${Date.now()}.jpg`);
+                  const uploadResult = await uploadPlantImage(file, user.id);
+                  imageUrl = uploadResult.url;
+                  console.log('Image uploaded to Storage:', imageUrl);
+                } catch (uploadErr) {
+                  console.error('Failed to upload image to Storage:', uploadErr);
+                  // Continue with data URL as fallback
+                }
+              }
+              
+              // Save plant result with image URL
+              const plantDataToSave = { ...parsed, uploadedImage: imageUrl };
+              const result = await savePlantResult(plantDataToSave, user.id);
+              
+              // Mark as saved in session to prevent duplicates on refresh/navigation
+              if (result && typeof window !== 'undefined') {
+                sessionStorage.setItem(sessionKey, 'true');
+              }
+            }
+          } catch (err) {
+            console.warn('Failed to save plant result for user:', err);
+          }
+        })();
       } else {
         console.error('Failed to parse plant data from URL param; redirecting to home. dataParam:', dataParam);
         router.push('/');
@@ -180,18 +224,28 @@ function ResultsContent() {
           </div>
 
           {/* Common Names */}
-          {plantData.commonNames && plantData.commonNames.length > 1 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-3">Also known as:</h3>
-              <div className="flex flex-wrap gap-2">
-                {plantData.commonNames.slice(1).map((name, idx) => (
-                  <span key={idx} className="bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-700">
-                    {name}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {(() => {
+            const commonNamesRaw = plantData.commonNames || [];
+            const commonNames = Array.isArray(commonNamesRaw)
+              ? commonNamesRaw
+              : (typeof commonNamesRaw === 'string' ? commonNamesRaw.split(',').map(s => s.trim()).filter(Boolean) : []);
+
+            if (commonNames.length > 1) {
+              return (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Also known as:</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {commonNames.slice(1).map((name, idx) => (
+                      <span key={idx} className="bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-700">
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+            return null;
+          })()}
         </div>
 
         {/* Images Grid */}

@@ -34,6 +34,10 @@ export default function Header() {
     router.push('/Login')
   }
 
+  const handleGalleryClick = () => {
+    router.push('/Gallery')
+  }
+
   return (
     <div className="w-full p-4 bg-[#ffd29d]">
       <div className="w-full flex justify-between items-center">
@@ -45,7 +49,7 @@ export default function Header() {
           <DropdownMenuContent>
             <DropdownMenuLabel>Profile</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Gallery</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleGalleryClick}>Gallery</DropdownMenuItem>
             <DropdownMenuItem>{user?.email ?? 'Not signed in'}</DropdownMenuItem>
             <DropdownMenuItem asChild>
               <a href="mailto:rayarpit72@gmail.com?subject=Plantify%20AI%20Contact" aria-label="Contact us via email">Contact</a>
